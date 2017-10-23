@@ -1,6 +1,7 @@
 #Java基础01  
 <hr>
 ##变量   
+
 将不确定的数据进行存储，默认高精度为主。  
 
 ###基本数据类型（8种）   
@@ -45,15 +46,21 @@
 \r ： 回车（Windows系统）
 \b ： 退格  
 <hr>
-####赋值比较运算符 
+####赋值比较运算符  
+
 		short s = 5;
 		//s = s + 4; //编译失败
 		s+=4;  //编译通过 
 instanceof 监测是否是类的对象
 <hr>
 ####逻辑运算符  
+
 ![](https://i.imgur.com/I8S6EoE.jpg)   
+
 #####逻辑运算真值表  
+
 ![](https://i.imgur.com/AVWzhZW.jpg)  
-####位运算符
-![](https://i.imgur.com/Hd4VoJx.png)
+
+####位运算符  
+
+![](https://i.imgur.com/Hd4VoJx.png)  
