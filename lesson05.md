@@ -22,3 +22,24 @@
 	* 编译时不被检测的异常（RuntimeException及其子类）（不需要标识） 
 
 *  子类在覆盖父类时，如果父类的方法抛出异常，那么子类的覆盖方法，只能抛出父类的异常或者该异常的子类
+
+<hr>     
+
+##包（package）  
+* 对类文件进行分类管理
+* 给类提供多层命名空间
+* 写在程序文件的第一行
+* 类名的全称是 包名.类名
+* 包也是一种封装形式
+  
+		javac -d . PackageDemo.java //源文件包含包目录
+		java pack.PackageDemo 
+<hr>     
+
+##jar包  
+
+		C:\myclass>jar -cf haha.jar pack1 pack2  
+  
+		C:\>dir > c:\2.txt  
+![](https://i.imgur.com/i7lHHow.jpg)  
+  
