@@ -1,7 +1,7 @@
 # Java基础05  
 <hr>     
 
-##异常   
+## 异常   
 * 问题划分
 	* 对于严重问题：Java通过Error类进行描述---一般不编写针对性的代码进行处理
 	* 对于非严重问题：Java通过Exception类进行描述---需要针对处理
@@ -25,7 +25,7 @@
 
 <hr>     
 
-##包（package）  
+## 包（package）  
 * 对类文件进行分类管理
 * 给类提供多层命名空间
 * 写在程序文件的第一行
@@ -36,7 +36,7 @@
 		java pack.PackageDemo 
 <hr>     
 
-##jar包  
+## jar包  
 
 		C:\myclass>jar -cf haha.jar pack1 pack2  
   

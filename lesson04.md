@@ -1,13 +1,13 @@
 # Java基础04  
 <hr>     
 
-##Object   
+## Object   
 * equals 比较地址  
 
-##toString   
+## toString   
 * getClass().getName() + '@' + Integer.toHexString(hashCode())
 
-##内部类  
+## 内部类  
 * 内部类访问规则
 	* 内部类可以直接访问外部类成员，包括私有
 	* 外部类访问内部类，必须建立内部类对象
