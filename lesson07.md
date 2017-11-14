@@ -1,4 +1,4 @@
-# Java基础06  
+# Java基础07  
 <hr>     
 
 ## 多线程通信   
@@ -69,4 +69,14 @@
 		*  "hamburger".substring(4, 8) returns "urge"
 		* "smiles".substring(1, 5) returns "mile"
 
- 
+*  toLowerCase
+	*  public String toLowerCase() 
+		*  使用默认语言环境的规则将此 String 中的所有字符都转换为小写
+	*  public String toUpperCase(Locale locale) 
+		*  使用给定 Locale 的规则将此 String 中的所有字符都转换为大写。 
+		
+* public String trim()
+	* 返回字符串的副本，忽略前导空白和尾部空白。
+
+* public int compareTo(String anotherString) 
+	* 按字典顺序比较两个字符串。该比较基于字符串中各个字符的 Unicode 值。按字典顺序将此 String 对象表示的字符序列与参数字符串所表示的字符序列进行比较。如果按字典顺序此 String 对象位于参数字符串之前，则比较结果为一个负整数。如果按字典顺序此 String 对象位于参数字符串之后，则比较结果为一个正整数。如果这两个字符串相等，则结果为 0；compareTo 只在方法 equals(Object) 返回 true 时才返回 0。 
