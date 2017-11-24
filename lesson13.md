@@ -97,4 +97,27 @@
 ![](https://i.imgur.com/CrdEP4q.png)  
   
 * public static double ceil(double a) 
-	* 返回最小的（最接近负无穷大）double 值，该值大于等于参数，并等于某个整数。
+	* 该值大于等于参数，并等于某个整数。   
+	
+			Math.floor(12.34)
+  
+* public static double floor(double a)
+	* 该值小于等于参数，并等于某个整数。  
+	 
+* public static long round(double a)
+	* 四舍五入
+	
+* public static double pow(double a,double b)
+	* a - 底数 ； b - 指数  
+	 
+* ppublic static double random()
+	* 返回带正号的 double 值，该值大于等于 0.0 且小于 1.0。返回值是一个伪随机选择的数，在该范围内（近似）均匀分布。
+  
+			int d = (int)(Math.random()*10+1); ( 1 <= d < 10 )  
+  
+* 类 Random
+	* 此类的实例用于生成伪随机数流。
+	
+			Random r = new Random();
+			int d = r.nextInt(10);  
+  
