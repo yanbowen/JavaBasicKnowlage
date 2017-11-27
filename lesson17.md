@@ -58,3 +58,27 @@ load加载，字节流数据，字符流也可以但是从1.6开始
 
 ---  
   
+### IP地址
+  
+	InetAddress ia = new InteAddress.getByName("www.baidu.com");
+	System.out.println("address" + ia.getHostAddress());
+	System.out.println("NAME" + ia.getHostName());  
+  
+有效端口号  
+
+	0 ~ 65535 ， 其中 0 ~ 1024 系统使用或保留端口  
+  
+### UDP(面向无连接) 
+* 将数据及源和目的封装成数据包中，不需要建立连接  
+* 每个数据包的大小限制在64k内
+* 无连接，不可靠连接、速度快  
+  
+### TCP  
+* 建立连接，形成传输数据的通道
+* 通过三次握手完成连接，可靠协议
+* 必须建立连接，功率会稍低  
+
+### Socket
+* Socket为网络服务的一种机制
+* 通信两端都有Socket
+* 数据在两个Socket间通过IO传输
