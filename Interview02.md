@@ -92,6 +92,159 @@
 
 HttpURLConnection直接支持GZIP压缩，默认添加"Accept-Encoding: gzip"头字段到请求中，并处理相应的回应，而Http Client虽然支持，但需要自己写代码处理。
 
+	
+## 基于Socket的java网络编程
+
+1，什么是Socket
+
+网络上的两个程序通过一个双向的通讯连接实现数据的交换，这个双向链路的一端称为一个Socket。Socket通常用来实现客户方和服务方的连接。Socket是TCP/IP协议的一个十分流行的编程界面，一个Socket由一个IP地址和一个端口号唯一确定。
+
+但是，Socket所支持的协议种类也不光TCP/IP一种，因此两者之间是没有必然联系的。在Java环境下，Socket编程主要是指基于TCP/IP协议的网络编程。
+
+2，Socket通讯的过程
+
+Server端Listen(监听)某个端口是否有连接请求，Client端向Server 端发出Connect(连接)请求，Server端向Client端发回Accept（接受）消息。一个连接就建立起来了。Server端和Client 端都可以通过Send，Write等方法与对方通信。
+
+对于一个功能齐全的Socket，都要包含以下基本结构，其工作过程包含以下四个基本的步骤：
+
+　　（1） 创建Socket；
+
+　　（2） 打开连接到Socket的输入/出流；
+
+　　（3） 按照一定的协议对Socket进行读/写操作；
+
+　　（4） 关闭Socket.（在实际应用中，并未使用到显示的close，虽然很多文章都推荐如此，不过在我的程序中，可能因为程序本身比较简单，要求不高，所以并未造成什么影响。）
+
+----
+
+## 简单的Client/Server程序 
+
+	客户端程序
+	import java.io.*;
+	import java.net.*;
+
+	public class TalkClient {
+		public static void main(String args[]) {
+
+			try{
+				Socket socket=new Socket("127.0.0.1",4700);
+				//向本机的4700端口发出客户请求
+				BufferedReader sin=new BufferedReader(new InputStreamReader(System.in));
+				
+				//由系统标准输入设备构造BufferedReader对象
+				PrintWriter os=new PrintWriter(socket.getOutputStream());
+
+				//由Socket对象得到输出流，并构造PrintWriter对象
+				BufferedReader is=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+				//由Socket对象得到输入流，并构造相应的BufferedReader对象
+				String readline;
+
+				readline=sin.readLine(); //从系统标准输入读入一字符串
+				while(!readline.equals("bye")){
+					//若从标准输入读入的字符串为 "bye"则停止循环
+					os.println(readline);
+					//将从系统标准输入读入的字符串输出到Server
+					os.flush();
+
+					//刷新输出流，使Server马上收到该字符串
+					System.out.println("Client:"+readline);
+					//在系统标准输出上打印读入的字符串
+					System.out.println("Server:"+is.readLine());
+					//从Server读入一字符串，并打印到标准输出上
+					readline=sin.readLine(); //从系统标准输入读入一字符串
+
+				} //继续循环
+				os.close(); //关闭Socket输出流
+				is.close(); //关闭Socket输入流
+				socket.close(); //关闭Socket
+
+			}catch(Exception e) {
+				System.out.println("Error"+e); //出错，则打印出错信息
+			}
+		}
+	}
+
+
+
+	服务器端程序
+	import java.io.*;
+	import java.net.*;
+	import java.applet.Applet;
+
+	public class TalkServer{
+		public static void main(String args[]) {
+			try{
+				ServerSocket server=null;
+				try{
+					server=new ServerSocket(4700);//创建一个ServerSocket在端口4700监听客户请求
+				}catch(Exception e) {
+					System.out.println("can not listen to:"+e);
+				//出错，打印出错信息
+
+				}
+				Socket socket=null;
+			try{
+				socket=server.accept();//使用accept()阻塞等待客户请求，有客户
+				//请求到来则产生一个Socket对象，并继续执行
+				}catch(Exception e) {
+				System.out.println("Error."+e);
+				//出错，打印出错信息
+				}
+				String line;
+				//由Socket对象得到输入流，并构造相应的BufferedReader对象
+				BufferedReader is=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+				//由Socket对象得到输出流，并构造PrintWriter对象
+				PrintWriter os=newPrintWriter(socket.getOutputStream());
+
+				//由系统标准输入设备构造BufferedReader对象
+				BufferedReader sin=new BufferedReader(new InputStreamReader(System.in));
+
+				//在标准输出上打印从客户端读入的字符串
+				System.out.println("Client:"+is.readLine());
+
+
+				//从标准输入读入一字符串
+				line=sin.readLine();
+
+				//如果该字符串为 "bye"，则停止循环
+				while(!line.equals("bye")){
+					os.println(line);
+					//向客户端输出该字符串
+
+					os.flush();
+					//刷新输出流，使Client马上收到该字符串
+
+					System.out.println("Server:"+line);
+					//在系统标准输出上打印读入的字符串
+
+					System.out.println("Client:"+is.readLine());
+					//从Client读入一字符串，并打印到标准输出上
+
+					line=sin.readLine();
+					//从系统标准输入读入一字符串
+				} 　//继续循环
+
+				os.close(); //关闭Socket输出流
+				is.close(); //关闭Socket输入流
+
+				socket.close(); //关闭Socket
+				server.close(); //关闭ServerSocket	(不应该关闭)
+
+			}catch(Exception e){
+				System.out.println("Error:"+e);
+				//出错，打印出错信息
+
+			}
+		}
+	}
+
+## 支持多客户的client/server程序
+
+前面的Client/Server程序只能实现Server和一个客户的对话。在实际应用 中，往往是在服务器上运行一个永久的程序，它可以接收来自其他多个客户端的请求，提供相应的服务。为了实现在服务器方给多个客户提供服务的功能，需要对上 面的程序进行改造，利用多线程实现多客户机制。服务器总是在指定的端口上监听是否有客户请求，一旦监听到客户请求，服务器就会启动一个专门的服务线程来响 应该客户的请求，而服务器本身在启动完线程之后马上又进入监听状态，等待下一个客户的到来。
+
+---
 ## 1. 什么是Activity? 
 	四大组件之一,一般的,一个用户交互界面对应一个activity
 	setContentView() ,// 要显示的布局 

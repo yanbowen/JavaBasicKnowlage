@@ -74,4 +74,43 @@
 * 由于不同的进程有着不同的内存区域，并且它们只能访问自己的那一块内存区域，所以我们不能像平时那样，传一个句柄过去就完事了——句柄指向的是一个内存区域，现在目标进程根本不能访问源进程的内存，那把它传过去又有什么用呢？所以我们必须将要传输的数据转化为能够在内存之间流通的形式。这个转化的过程就叫做序列化与反序列化。简单来说是这样的：比如现在我们要将一个对象的数据从客户端传到服务端去，我们就可以在客户端对这个对象进行序列化的操作，将其中包含的数据转化为序列化流，然后将这个序列化流传输到服务端的内存中去，再在服务端对这个数据流进行反序列化的操作，从而还原其中包含的数据——通过这种方式，我们就达到了在一个进程中访问另一个进程的数据的目的。
 
 * 而通常，在我们通过AIDL进行跨进程通信的时候，选择的序列化方式是实现 Parcelable 接口。 
-* 基本的操作流程就是：在服务端实现AIDL中定义的方法接口的具体逻辑，然后在客户端调用这些方法接口，从而达到跨进程通信的目的。
+* 基本的操作流程就是：在服务端实现AIDL中定义的方法接口的具体逻辑，然后在客户端调用这些方法接口，从而达到跨进程通信的目的。  
+  
+---
+## HashTable和HashMap的区别详解
+1. HashMap是基于哈希表实现的，每一个元素是一个key-value对，其内部通过单链表解决冲突问题，容量不足（超过了阀值）时，同样会自动增长。  
+	* HashMap是非线程安全的，只是用于单线程环境下，多线程环境下可以采用concurrent并发包下的concurrentHashMap。
+	* HashMap 实现了Serializable接口，因此它支持序列化，实现了Cloneable接口，能被克隆。
+  
+2. Hashtable 是线程安全的，能用于多线程环境中（Hashtable同样有上面功能）  
+
+HashTable和HashMap区别  
+1、继承的父类不同  
+
+	Hashtable继承自Dictionary类，而HashMap继承自AbstractMap类。但二者都实现了Map接口。
+2、线程安全性不同  
+
+	Hashtable 中的方法是Synchronize的，而HashMap中的方法在缺省情况下是非Synchronize的。
+	在多线程并发的环境下，可以直接使用Hashtable，不需要自己为它的方法实现同步，但使用HashMap时就必须要自己增加同步处理。
+
+3、是否提供contains方法  
+
+    HashMap把Hashtable的contains方法去掉了，改成containsValue和containsKey，因为contains方法容易让人引起误解。
+    Hashtable则保留了contains，containsValue和containsKey三个方法，其中contains和containsValue功能相同。  
+  
+4、key和value是否允许null值  
+ 
+Hashtable中，key和value都不允许出现null值。  
+HashMap中，null可以作为键，这样的键只有一个；可以有一个或多个键所对应的值为null。当get()方法返回null值时，可能是 HashMap中没有该键，也可能使该键所对应的值为null。因此，在HashMap中不能由get()方法来判断HashMap中是否存在某个键， 而应该用containsKey()方法来判断。  
+  
+5、两个遍历方式的内部实现上不同  
+
+Hashtable、HashMap都使用了 Iterator。而由于历史原因，Hashtable还使用了Enumeration的方式 
+  
+6、hash值不同  
+
+哈希值的使用不同，HashTable直接使用对象的hashCode。而HashMap重新计算hash值。  
+  
+7、内部实现使用的数组初始化和扩容方式不同   
+
+HashTable在不指定容量的情况下的默认容量为11，而HashMap为16，Hashtable不要求底层数组的容量一定要为2的整数次幂，而HashMap则要求一定为2的整数次幂
