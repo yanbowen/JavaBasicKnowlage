@@ -108,8 +108,7 @@ notifyAll() 方法将把因调用该对象的 wait() 方法而阻塞的所有线
 
 饿汉式  
 
-	// 定义为sealed防止派生，因为派生可能增加实例
-    public sealed class Singleton
+    public class Singleton
     {
         private static readonly Singleton m_Instance = new Singleton();
         private Singleton()
