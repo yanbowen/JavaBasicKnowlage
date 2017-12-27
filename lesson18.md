@@ -13,7 +13,6 @@
 	* 验证 是否有正确的内部结构，并和其他类协调一致
 	* 准备 负责为类的静态成员分配内存，并设置默认初始化值
 	* 解析 将类的二进制数据中的符号引用替换为直接引用
-* 初始化 就是我们以前讲过的初始化步骤
 
 ### 类初始化时机 
 
@@ -78,7 +77,7 @@
 ### 通过反射获取构造方法并使用  
   
 	//获取字节码文件对象
-	Class c = Class.forName("cn.it.Person");
+	Class c = Class.forName("cn.yanbowen.person.Person");
 	//获取构造方法
 	//返回一个包含某些 Constructor 对象的数组，这些对象反映此 Class 对象所表示的类的所有公共构造方法。
 	Constructor[] cons = c.getConstructors();
@@ -111,7 +110,7 @@
 	 */
 		
 	//获取字节码文件对象
-	Class c = Class.forName("cn.it.Person");
+	Class c = Class.forName("cn.yanbowen.person.Person");
 
 	//获取带参构造器方法对象
 	Constructor con = c.getConstructor(String.class, int.class, String.class);
@@ -119,4 +118,96 @@
 	//通过带参构造方法对象创建对象
 	Object obj = con.newInstance("韦小宝",33,"北京");
 
+	System.out.println(obj);  
+  
+---  
+### 通过反射获取私有构造方法  
+
+
+	/*
+	 * private Person(String name){}
+	 * Person p = new Person("韦小宝");
+	 * System.out.println(p);
+	 */
+
+	// 获取字节码文件对象
+	Class c = Class.forName("cn.yanbowen.person.Person");
+		
+	//获取私有构造器方法对象
+	Constructor con = c.getDeclaredConstructor(String.class); 
+		
+	//将此对象的 accessible 标志设置为指示的布尔值。值为 true 则指示反射的对象在使用时应该取消 Java 语言访问检查。
+	con.setAccessible(true); 
+		
+	//通过带参构造方法对象创建对象
+	Object obj = con.newInstance("韦小宝");
+		
+	System.out.println(obj);   
+  
+---  
+  
+### 通过反射获取成员变量并使用  
+  
+	/*
+	 * Person p = new Person();
+	 * p.address = "北京";
+	 * System.out.println(p);
+	 */
+
+
+	// 获取字节码文件对象
+	Class c = Class.forName("cn.yanbowen.person.Person");
+  
+	// 通过无参构造方法创建对象
+	Constructor con = c.getConstructor();
+	Object obj = con.newInstance();
+
+	// 获取单个的成员变量
+	Field addressField = c.getField("address");
+
+	//将指定对象变量上此Field 对象表示的字段设置为指定的新值
+	//给obj对象的addressField字段设置为北京
+	addressField.set(obj, "北京");
+		
+	Field nameField = c.getDeclaredField("name");
+	nameField.setAccessible(true);
+	nameField.set(obj, "令狐冲");
 	System.out.println(obj);
+
+
+### 通过反射获取成员变量并使用   
+  
+	/*
+	 * Person p = new Person();
+	 * p.show();
+	 */
+
+
+	// 获取字节码文件对象
+	Class c = Class.forName("cn.yanbowen.person.Person");
+ 
+	Constructor con = c.getConstructor();
+	Object obj = con.newInstance();
+		
+	//第一个参数表示的方法名，第二个参数表示的是方法的参数的class类型
+	Method m1 = c.getMethod("show");
+	//第一个参数表示对象是谁，第二参数表示调用该方法的实际参数
+	m1.invoke(obj);  
+
+### 反射获取带参带返回值成员方法并使用
+  
+	// 获取字节码文件对象
+	Class c = Class.forName("cn.yanbowen.person.Person");
+ 
+	Constructor con = c.getConstructor();
+	Object obj = con.newInstance();
+		
+	//第一个参数表示的方法名，第二个参数表示的是方法的参数的class类型
+	Method m2 = c.getMethod("method", String.class);
+	
+	m2.invoke(obj,"Hello");  
+  
+	Method m3 = c.getMethod("getString", String.class, int.class);
+	
+	Object objString = m3.invoke(obj,"Hello", 100);
+	System.out.println(objString);
