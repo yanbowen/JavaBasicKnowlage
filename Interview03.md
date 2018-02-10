@@ -122,3 +122,190 @@ notifyAll() 方法将把因调用该对象的 wait() 方法而阻塞的所有线
         }
     }  
   
+## 使用软引用构建缓存  
+  
+一、为什么要使用软引用  
+
+关于软引用的介绍中，已经提到了软引用的特性。使用SoftReference引用的对象会有很长的生命周期，只有当系统的内存不足的时候，才会去释放这些软引用对象。所以可以使用软引用来缓存一些比较昂贵的资源，比如获取的网络图片数据。  
+  
+当应用从网络中获取网络图片数据时，用户完全有可能做一些重复性的操作去查看相同的图片信息。对于这样的问题，通常会有两种解决方法: 一种是把过去查看过的图片信息保存在内存中，每一个存储了图片信息的 Java 对象的生命周期都贯穿整个应用程序生命周期，另一种是当用户开始查看其他图片信息的时候，把存储了当前的图片信息的 Java 对象结束引用，使得垃圾收集线程可以回收其所占用的内存空间，当用户再次需要浏览该图片信息的时候，重新获取图片信息。  
+  
+很显然，第一种实现方法将造成大量的内存浪费，而第二种实现的缺陷在于即使垃圾收集线程还没有进行垃圾收集，包含图片信息的对象仍然完好地保存在内存中，应用程序也要重新构建一个对象。  
+  
+像访问磁盘文件、访问网络资源、查询数据库等操作都是影响应用程序执行性能的重要因素，如果能重新获取那些尚未被回收的 Java 对象的引用，必将减少不必要的访问，大大提高程序的运行速度。   
+  
+二、具体描述：  
+1．强引用  
+以前我们使用的大部分引用实际上都是强引用，这是使用最普遍的引用。如果一个对象具有强引用，那就类似于必不可少的生活用品，垃圾回收器绝不会回收它。当内存空 间不足，Java虚拟机宁愿抛出OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足问题。 如：  
+
+	String str = "abc";
+	List<String> list = new Arraylist<String>();
+	list.add(str);  
+  
+在list集合里的数据不会释放，即使内存不足也不会  
+
+2、软引用（SoftReference）   
+如果一个对象只具有软引用，那就类似于可有可物的生活用品。如果内存空间足够，垃圾回收器就不会回收它，如果内存空间不足了，就会回收这些对象的内存。只要垃圾回收器没有回收它，该对象就可以被程序使用。软引用可用来实现内存敏感的高速缓存。   
+软引用可以和一个引用队列（ReferenceQueue）联合使用，如果软引用所引用的对象被垃圾回收，JAVA虚拟机就会把这个软引用加入到与之关联的引用队列中。 如：  
+
+	public class Test {  
+
+    	public static void main(String[] args){  
+        	System.out.println("开始");            
+        	A a = new A();            
+        	SoftReference<A> sr = new SoftReference<A>(a);  
+        	a = null;  
+        	if(sr!=null){  
+        	    a = sr.get();  
+        	}  
+        	else{  
+        	    a = new A();  
+        	    sr = new SoftReference<A>(a);  
+        	}            
+        	System.out.println("结束");     
+    	}       
+
+	}  
+
+	class A{  
+    	int[] a ;  
+    	public A(){  
+    	    a = new int[100000000];  
+    	}  
+	}  
+  
+当内存足够大时可以把数组存入软引用，取数据时就可从内存里取数据，提高运行效率  
+
+3．弱引用（WeakReference）  
+如果一个对象只具有弱引用，那就类似于可有可物的生活用品。弱引用与软引用的区别在于：只具有弱引用的对象拥有更短暂的生命周期。在垃圾回收器线程扫描它 所管辖的内存区域的过程中，一旦发现了只具有弱引用的对象，不管当前内存空间足够与否，都会回收它的内存。不过，由于垃圾回收器是一个优先级很低的线程， 因此不一定会很快发现那些只具有弱引用的对象。   
+弱引用可以和一个引用队列（ReferenceQueue）联合使用，如果弱引用所引用的对象被垃圾回收，Java虚拟机就会把这个弱引用加入到与之关联的引用队列中。 如：  
+
+	Object c = new Car(); //只要c还指向car object, car object就不会被回收
+	WeakReference<Car> weakCar = new WeakReference(Car)(car);
+  
+当要获得weak reference引用的object时, 首先需要判断它是否已经被回收:   
+
+	weakCar.get();
+
+如果此方法为空, 那么说明weakCar指向的对象已经被回收了.  
+
+下面来看一个例子:  
+
+	public class Car {
+  	private double price;
+  	private String colour;
+
+  	public Car(double price, String colour){
+    	this.price = price;
+    	this.colour = colour;
+  	}
+
+  	public double getPrice() {
+    	return price;
+  	}
+  	public void setPrice(double price) {
+    	this.price = price;
+  	}
+  	public String getColour() {
+    	return colour;
+  	}
+  	public void setColour(String colour) {
+    	this.colour = colour;
+  	}
+
+  	public String toString(){
+    	return colour +"car costs $"+price;
+  	}
+
+	}
+
+	public class TestWeakReference {
+
+	public static void main(String[] args) {
+
+    Car car = new Car(22000,"silver");
+    WeakReference<Car> weakCar = new WeakReference<Car>(car);
+
+    int i=0;
+
+    while(true){
+      if(weakCar.get()!=null){
+        i++;
+        System.out.println("Object is alive for "+i+" loops - "+weakCar);
+      }else{
+        System.out.println("Object has been collected.");
+        break;
+      }
+    }
+	}
+
+	}
+   
+
+在上例中, 程序运行一段时间后, 程序打印出”Object has been collected.” 说明, weak reference指向的对象的被回收了.  
+
+如果要想打出的是  
+
+	Object is alive for “+i+” loops - “+weakCar
+
+那么只要在这句话前面加上   
+
+	System.out.println(“car==== “+car); 
+
+因为在此强引用了car对象
+
+4．虚引用（PhantomReference）  
+ 
+“虚引用”顾名思义，就是形同虚设，与其他几种引用都不同，虚引用并不会决定对象的生命周期。如果一个对象仅持有虚引用，那么它就和没有任何引用一样，在任何时候都可能被垃圾回收。   
+
+虚引用主要用来跟踪对象被垃圾回收的活动。虚引用与软引用和弱引用的一个区别在于：虚引用必须和引用队列（ReferenceQueue）联合使用。当垃 圾回收器准备回收一个对象时，如果发现它还有虚引用，就会在回收对象的内存之前，把这个虚引用加入到与之关联的引用队列中。程序可以通过判断引用队列中是 否已经加入了虚引用，来了解   
+
+被引用的对象是否将要被垃圾回收。程序如果发现某个虚引用已经被加入到引用队列，那么就可以在所引用的对象的内存被回收之前采取必要的行动。 
+特别注意，在世纪程序设计中一般很少使用弱引用与虚引用，使用软用的情况较多，这是因为软引用可以加速JVM对垃圾内存的回收速度，可以维护系统的运行安全，防止内存溢出（OutOfMemory）等问题的产生。  
+
+总结：  
+强引用：   
+String str = “abc”;   
+list.add(str);   
+软引用：   
+如果弱引用对象回收完之后，内存还是报警，继续回收软引用对象   
+弱引用：   
+如果虚引用对象回收完之后，内存还是报警，继续回收弱引用对象   
+虚引用：   
+虚拟机的内存不够使用，开始报警，这时候垃圾回收机制开始执行System.gc(); String s = “abc”;如果没有对象回收了， 就回收没虚引用的对象    
+  
+二、如何使用软引用  
+  
+SoftReference 的特点是它的一个实例保存着一个 Java 对象的软引用，该软引用的存在不妨碍垃圾收集器线程对该 Java 对象的回收。也就是说，一旦SoftReference 保存着一个 Java 对象的软引用之后，在垃圾收集器线程对这个 Java 对象回收之前， SoftReference 类所提供的 get() 方法都会返回 这个Java 对象的强引用。另外，一旦垃圾线程回收该 Java 对象之后， get() 方法将返回 null 。  
+  
+软引用的使用方法如下面的Java代码所示 ：  
+  
+	MyObject aRef = new MyObject();//创建一个对象
+	SoftReference aSoftRef = new SoftReference(aRef);//创建对象的软引用  
+  
+上面的代码执行后，对于MyObject 对象，有两个引用路径，一个是来自 aSoftRef对象的软引用，一个来自变量 aRef 的强引用，所以 MyObject对象是强可及对象。紧跟着，可以使用下面的java的代码结束 aReference 对 MyObject 实例的强引用 ：  
+  
+	aRef = null ;//断开对象的强引用  
+  
+此后， MyObject 对象成为了软可及对象。如果垃圾收集线程进行内存垃圾收集，并不会因为有一个 SoftReference 对该对象的引用而始终保留该对象。 Java 虚拟机的垃圾收集线程对软可及对象和其他一般 Java 对象进行了区别对待 ，软可及对象的清理是由垃圾收集线程根据其特定算法按照内存需求决定的。也就是说，垃圾收集线程会在虚拟机抛出 OutOfMemoryError 之前回收软可及对象，而且虚拟机会尽可能优先回收长时间闲置不用的软可及对象，对那些刚刚构建的或刚刚使用过的“新”软可及对象会被虚拟机尽可能保留。如果想获取软引用中包含的对象，可以使用下面的Java代码：  
+  
+	MyObject anotherRef =(MyObject) aSoftRef .get();//通过软引用获取对象  
+  
+在回收这些对象之前，可以通过上面的代码重新获得对该实例的强引用。而回收之后，当调用软引用的get() 方法时，返回的是 null  
+  
+三、如何使用 ReferenceQueue
+
+作为一个 Java 对象， SoftReference 对象除了具有保存软引用的特殊性之外，也具有 Java 对象的一般性。所以，当软可及对象被回收之后，虽然这个 SoftReference 对象的 get() 方法返回 null, 但这个 SoftReference 对象已经不再具有存在的价值，需要一个适当的清除机制，避免大量 SoftReference 对象带来的内存泄漏。在 java.lang.ref 包里还提供了 ReferenceQueue 。如果在创建 SoftReference 对象的时候，使用了带有一个 ReferenceQueue 对象作为参数的构造方法，如下面的Java代码 :  
+  
+	ReferenceQueue queue = new ReferenceQueue();//创建引用队列
+	SoftReference  ref = new SoftReference( aMyObject， queue );// 把引用加入到引用队列  
+  
+当这个 SoftReference 所软引用的 aMyOhject 被垃圾收集器回收的同时，ref 所强引用的 SoftReference 对象被列入 ReferenceQueue 。也就是说， ReferenceQueue 中保存的对象是 Reference 对象，而且是已经失去了它所软引用的对象的 Reference 对象。另外从 ReferenceQueue 这个名字也可以看出，它是一个队列，当调用它的 poll() 方法的时候，如果这个队列中不是空队列，那么将返回队列前面的那个 Reference 对象。  
+  
+在任何时候，都可以调用 ReferenceQueue 的 poll() 方法来检查是否有它所关心的非强可及对象被回收。如果队列为空，将返回一个 null, 否则该方法返回队列中最前面一个 Reference 对象。利用这个方法，可以检查哪个 SoftReference 所软引用的对象已经被回收。可以把这些失去所软引用的对象的 SoftReference 对象清除掉，如下面的Java代码所示。:  
+  
+	SoftReference ref = null ;
+	while ((ref = (EmployeeRef) q .poll()) != null ) {
+	// 清除 ref
+	}
+  
