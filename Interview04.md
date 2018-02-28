@@ -428,10 +428,17 @@ MyService.java:
 1 通过startService  
 
     Service会经历 onCreate 到onStart，然后处于运行状态，stopService的时候调用onDestroy方法。
-	如果是调用者自己直接退出而没有调用stopService的话，Service会一直在后台运行。
+	如果是调用者自己直接退出而没有调用stopService的话，Service会一直在后台运行。  
+  
+onCreate()--->onStartCommand()（onStart()方法已过时） ---> onDestory()  
+
 2 通过bindService   
 
-    Service会运行onCreate，然后是调用onBind， 这个时候调用者和Service绑定在一起。调用者退出了，Srevice就会调用onUnbind->onDestroyed方法。  
+    Service会运行onCreate，然后是调用onBind， 这个时候调用者和Service绑定在一起。调用者退出了，Srevice就会调用onUnbind->onDestroyed方法。    
+   
+
+onCreate() --->onBind()--->onunbind()--->onDestory()  
+
 
 所谓绑定在一起就共存亡了。调用者也可以通过调用unbindService方法来停止服务，这时候Srevice就会调用onUnbind->onDestroyed方法。
 需要注意的是如果这几个方法交织在一起的话，会出现什么情况呢？  
