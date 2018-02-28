@@ -61,3 +61,16 @@ Linux驱动和Framework相关的主要包含两部分，分别是SurfaceFlingger
   
 https://www.jianshu.com/p/2b634a7c49ec  
   
+当我们启动一个App的时候，Android系统会启动一个Linux Process，该Process包含一个Thread，称为UI Thread或Main Thread。通常一个应用的所有组件都运行在这一个Process中，当然，你可以通过修改四大组件在Manifest.xml中的代码块(<activity><service><provider><receiver>)中的android:process属性指定其运行在不同的process中。当一个组件在启动的时候，如果该process已经存在了，那么该组件就直接通过这个process被启动起来，并且运行在这个process的UI Thread中。
+
+UI Thread中运行着许多重要的逻辑，如系统事件处理，用户输入事件处理，UI绘制，Service，Alarm等，如下图：
+  
+![](https://i.imgur.com/59VtF7F.png)  
+  
+Android提供了四种常用的操作多线程的方式，分别是：  
+1. Handler+Thread  
+2. AsyncTask  
+3. ThreadPoolExecutor  
+4. IntentService  
+
+
