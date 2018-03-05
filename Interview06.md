@@ -252,4 +252,9 @@ onRestoreInstanceState()被调用的前提是，activity A 确实已经被销毁
 
 例如，正在显示activity A 的时候，按下HOME键回到了主界面，然后紧接着又返回activity A，这种情况下，活动一般不会因为内存的原因而被系统销毁，故onRestoreInstanceState方法不会执行。
 
-另外，onRestoreInstanceState的bundle参数也会传到onCreate()中，你也可以选择在onCreate()方法中做数据还原。此方法在onStart()方法之后执行。
+另外，onRestoreInstanceState的bundle参数也会传到onCreate()中，你也可以选择在onCreate()方法中做数据还原。此方法在onStart()方法之后执行。  
+  
+---
+
+
+  
