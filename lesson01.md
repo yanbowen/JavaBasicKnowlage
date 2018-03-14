@@ -62,9 +62,7 @@
 
 \b ： 退格  
 
-\r ： 回车（Windows系统）  
-
-\b ： 退格    
+\r ： 回车（Windows系统）    
 
 <hr>  
 
