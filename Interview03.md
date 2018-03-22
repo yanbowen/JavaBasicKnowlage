@@ -110,7 +110,7 @@ notifyAll() 方法将把因调用该对象的 wait() 方法而阻塞的所有线
 
     public class Singleton
     {
-        private static readonly Singleton m_Instance = new Singleton();
+        private static Singleton m_Instance = new Singleton();
         private Singleton()
         {
             // 将默认构造函数定义为私有，防止外部调用它实例化别的对象
