@@ -113,4 +113,13 @@ Hashtable、HashMap都使用了 Iterator。而由于历史原因，Hashtable还�
   
 7、内部实现使用的数组初始化和扩容方式不同   
 
-HashTable在不指定容量的情况下的默认容量为11，而HashMap为16，Hashtable不要求底层数组的容量一定要为2的整数次幂，而HashMap则要求一定为2的整数次幂
+HashTable在不指定容量的情况下的默认容量为11，而HashMap为16，Hashtable不要求底层数组的容量一定要为2的整数次幂，而HashMap则要求一定为2的整数次幂    
+    
+---    
+   
+ANR：application not responding
+当对输入事件（如按键、触摸屏事件）的响应超过5秒、意图接收者（intentReceiver）超过10秒钟仍未执行完毕时都会报ANR。
+Android应用程序完全运行在一个独立的线程中。任何在主线程中运行的，需要消耗大量时间的操作都会引发ANR。因此，需要消耗大量时间的操作如访问网络和数据库，都要放到子线程中或者使用异步请求。
+
+Force Close：
+一般像空指针、数组越界、类型转换异常等。可以通过logcat查看抛出异常的代码出现的位置，然后到程序对应代码中进行修改。

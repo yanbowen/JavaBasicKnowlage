@@ -84,43 +84,30 @@ notifyAll() 方法将把因调用该对象的 wait() 方法而阻塞的所有线
 	
 懒汉式	  
 
-	public class Singleton
-    {
-		
-        private static Singleton m_Instance;
+	public class SingletonDemo {
+    	private static SingletonDemo instance;
+    	private SingletonDemo(){
 
-        private Singleton()
-        {
-            // 将默认构造函数定义为私有，防止外部调用它实例化别的对象
-        }
-
-        public static Singleton GetInstance()
-        {
-
-            if (m_Instance == null)
-            {
-                m_Instance = new Singleton();
-            }
-
-            return m_Instance;
-        }
+    	}
+    	public static synchronized SingletonDemo getInstance(){
+    	    if(instance==null){
+    	        instance=new SingletonDemo();
+    	    }
+    	    return instance;
+    	}
 	}
 
 饿汉式  
 
-    public class Singleton
-    {
-        private static Singleton m_Instance = new Singleton();
-        private Singleton()
-        {
-            // 将默认构造函数定义为私有，防止外部调用它实例化别的对象
-        }
+	public class SingletonDemo {
+    	private static SingletonDemo instance = new SingletonDemo();
+    	private SingletonDemo(){
 
-        public static Singleton GetInstance()
-        {
-            return m_Instance;
-        }
-    }  
+    	}
+    	public static SingletonDemo getInstance(){
+    	    return instance;
+    	}
+	} 
   
 ## 使用软引用构建缓存  
   
