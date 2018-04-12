@@ -68,7 +68,12 @@ EventBus使用起来很简单，分为五个步骤：
    
 ---   
    
-## EventBus 解决了什么问题
+## EventBus 解决了什么问题   
+EventBus是一款Android下的发布/订阅事件总线机制。可以代替Intent、Handler、Broadcast等在Fragment、Activity之间传递消息。   
+优点：开销小，代码优雅。将发送者和接受者解耦。  
+既然是有关于事件的发布和订阅，那么发布者和订阅者的关系又是怎样的呢？   
+事件的发布者可以发布多个事件，发布者同时也可以是订阅者，订阅者可以订阅多个事件。   
+
 在日常开发中，回调的使用场景非常多，比如按钮的点击事件，网络的请求结果等等，它表示的是对某一将来可能发生事件的监听，具体使用步骤为以下 3 步：
 
 * 创建一个回调接口，在接口中定义监听到事件发生时要进行的操作
@@ -90,5 +95,123 @@ EventBus使用起来很简单，分为五个步骤：
 
 EventBus 会在编译时和运行时（取决于你是否添加索引）通过处理注解和反射的方式拿到订阅方法和所在的类，然后将订阅者、订阅方法、订阅的事件分别保存在两个属性中。
 
-在有发送者发送事件时，EventBus 根据事件去前面保存的属性里找到订阅者和订阅方法，然后以反射的方式调用它。   
+在有发送者发送事件时，EventBus 根据事件去前面保存的属性里找到订阅者和订阅方法，然后以反射的方式调用它。      
+   
+   
+----   
+   
+![](https://i.imgur.com/NBWyend.jpg)
+
+### 何为粘性事件（Sticky事件）
+简单讲，就是在发布事件之后再订阅该事件也能收到该事件。Android中就有这样的实例，也就是Sticky Broadcast，即粘性广播。正常情况下如果发送者发送了某个广播，而接收者在这个广播发送后才注册自己的Receiver，这时接收者便无法接收到 刚才的广播，为此Android引入了StickyBroadcast，在广播发送结束后会保存刚刚发送的广播（Intent），这样当接收者注册完 Receiver后就可以接收到刚才已经发布的广播。这就使得我们可以预先处理一些事件，让有消费者时再把这些事件投递给消费者.  
+
+EventBus也提供了这样的功能，有所不同是EventBus会存储所有的Sticky事件，如果某个事件在不需要再存储则需要手动进行移除。用户通过Sticky的形式发布事件，而消费者也需要通过Sticky的形式进行注册，当然这种注册除了可以接收 Sticky事件之外和常规的注册功能是一样的，其他类型的事件也会被正常处理。    
+   
+---   
+   
+MainActivity.class   
+   
+	public class MainActivity extends AppCompatActivity {
+    	private TextView tv_message;
+    	private Button bt_message;
+    	private Button bt_subscription;
+    	@Override
+    	protected void onCreate(Bundle savedInstanceState) {
+    	    super.onCreate(savedInstanceState);
+    	    setContentView(R.layout.activity_main);
+    	    tv_message=(TextView)this.findViewById(R.id.tv_message);
+    	    tv_message.setText("MainActivity");
+    	    bt_subscription=(Button)this.findViewById(R.id.bt_subscription);
+    	    bt_subscription.setText("订阅事件");
+    	    bt_message=(Button)this.findViewById(R.id.bt_message);
+    	    bt_message.setText("跳转到SecondActivity");
+    	    bt_message.setOnClickListener(new View.OnClickListener() {
+    	        @Override
+    	        public void onClick(View v) {
+    	          startActivity(new Intent(MainActivity.this,SecondActivity.class));
+    	        }
+    	    });
+    	    bt_subscription.setOnClickListener(new View.OnClickListener() {
+    	        @Override
+    	        public void onClick(View v) {
+    	            //注册事件
+    	            if(!EventBus.getDefault().isRegistered(MainActivity.this)) {
+    	                EventBus.getDefault().register(MainActivity.this);
+    	            }else{
+    	                Toast.makeText(MainActivity.this,"请勿重复注册事件",Toast.LENGTH_SHORT).show();
+    	            }
+    	        }
+    	    });
+
+    	}
+    	@Override
+    	protected void onDestroy() {
+    	    super.onDestroy();
+    	    //取消注册事件
+    	    EventBus.getDefault().unregister(this);
+    	}
+
+    	@Subscribe(threadMode = ThreadMode.MAIN)
+    	public void onMoonEvent(MessageEvent messageEvent){
+    	    tv_message.setText(messageEvent.getMessage());
+    	}
+    	@Subscribe(sticky = true)
+    	public void ononMoonStickyEvent(MessageEvent messageEvent){
+    	    tv_message.setText(messageEvent.getMessage());
+    	}
+	}    
+    
+SecondActivity.class   
+   
+	public class SecondActivity extends AppCompatActivity {
+    	private Button bt_message;
+    	private TextView tv_message;
+    	private Button bt_subscription;
+    	@Override
+    	protected void onCreate(Bundle savedInstanceState) {
+    	    super.onCreate(savedInstanceState);
+    	    setContentView(R.layout.activity_main);
+    	    tv_message=(TextView)this.findViewById(R.id.tv_message);
+    	    tv_message.setText("SecondActivity");
+    	    bt_subscription=(Button)this.findViewById(R.id.bt_subscription);
+    	    bt_subscription.setText("发送粘性事件");
+    	    bt_subscription.setOnClickListener(new View.OnClickListener() {
+    	        @Override
+    	        public void onClick(View v) {
+    	            EventBus.getDefault().postSticky(new MessageEvent("粘性事件"));
+    	            finish();
+    	        }
+    	    });
+    	    bt_message=(Button)this.findViewById(R.id.bt_message);
+    	    bt_message.setText("发送事件");
+    	    bt_message.setOnClickListener(new View.OnClickListener() {
+    	        @Override
+    	        public void onClick(View v) {
+    	            EventBus.getDefault().post(new MessageEvent("欢迎关注刘望舒的博客"));
+    	            finish();
+    	        }
+    	    });
+    	}
+	}   
+   
+MessageEvent.class   
+   
+	public class MessageEvent {
+
+    	private String message;
+
+    	public MessageEvent(String message) {
+    	    this.message = message;
+    	}
+
+    	public String getMessage() {
+    	    return message;
+    	}
+
+    	public void setMessage(String message) {
+    	    this.message = message;
+    	}
+	}    
+   
+---   
    
