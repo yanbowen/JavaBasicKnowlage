@@ -1,12 +1,6 @@
 # 面试总结01 
 <hr>   
   
-## Log4j
-* Log4j是Apache的一个开源项目，通过使用Log4j，我们可以控制日志信息输送的目的地是控制台、文件、GUI组件，甚至是套接口服务器、NT的事件记录器、UNIX Syslog守护进程等；  
-  
-![](https://i.imgur.com/pGuC6UY.png)  
-![](https://i.imgur.com/pKZOYjt.png)  
-  
 ## DIV  
 * DIV是层叠样式表中的定位技术   
   
@@ -114,7 +108,9 @@ Hashtable、HashMap都使用了 Iterator。而由于历史原因，Hashtable还�
 7、内部实现使用的数组初始化和扩容方式不同   
 
 HashTable在不指定容量的情况下的默认容量为11，而HashMap为16，Hashtable不要求底层数组的容量一定要为2的整数次幂，而HashMap则要求一定为2的整数次幂    
-    
+      
+8、HashMap采用快速失败机制，而Hashtable不是   
+
 ---    
    
 ANR：application not responding
