@@ -3,79 +3,339 @@
   
 ## HttpURLConnection与HttpClient浅析
   
-* 概念      
-	* HTTP 协议可能是现在 Internet 上使用得最多、最重要的协议了，越来越多的 Java 应用程序需要直接通过 HTTP 协议来访问网络资源。在 JDK 的 java.net 包中已经提供了访问 HTTP 协议的基本功能：HttpURLConnection。但是对于大部分应用程序来说，JDK 库本身提供的功能还不够丰富和灵活。
-	* 除此之外，在Android中，androidSDK中集成了Apache的HttpClient模块，用来提供高效的、最新的、功能丰富的支持 HTTP 协议工具包，并且它支持 HTTP 协议最新的版本和建议。使用HttpClient可以快速开发出功能强大的Http程序。
+### 1. GET请求与POST请求
 
-* 区别
-	* HttpClient是个很不错的开源框架，封装了访问http的请求头，参数，内容体，响应等等，
-	* HttpURLConnection是java的标准类，什么都没封装，用起来太原始，不方便，比如重访问的自定义，以及一些高级功能等。  
+HTTP协议是现在Internet上使用得最多、最重要的协议了，越来越多的Java应用程序需要直接通过HTTP协议来访问网络资源。
+
+在介绍HttpURLConnection前，我们还是再来说一下URL请求最常用的两种方式：GET请求与POST请求。
+
+GET请求的数据会附在URL之后（就是把数据放置在HTTP协议头中），以?分割URL和传输数据，参数之间以&相连，如：http://localhost:8080/test.do?name=test&password=123456。
+
+GET请求发送的参数如果数据是英文字母或数字，则按原样发送，如果是空格，则转换为+，如果是中文或其他字符，则直接把字符串用BASE64加密，得出如 %E4%BD%A0%E5%A5%BD 这类似的字符串，其中％XX中的XX为该符号以16进制表示的ASCII。
+
+POST请求的参数不是放在URL字符串里面，而是放在HTTP请求的正文内，请求的参数被封装起来以流的形式发送给服务端。
+
+对于GET方式提交数据的大小，HTTP协议并没有硬性限制，但某些浏览器及服务器会对它进行限制，如IE对URL长度的限制是2083字节(2K+35)。理论上POST也没有限制，可传较大量的数据。
+
+POST的安全性要比GET的安全性高。比如：通过GET提交数据，用户名和密码将明文出现在URL上，因为登录页面有可能被浏览器缓存，如果其他人查看浏览器的历史纪录，那么别人就可以拿到你的账号和密码了，除此之外，使用GET提交数据还可能会造成Cross-site request forgery（CSRF，跨站请求伪造）攻击。
+
+一般来说，Get是向服务器索取数据的一种请求，而Post是向服务器提交数据的一种请求。    
+    
+### 2. HttpURLConnection简介
+
+在JDK的java.net包中已经提供了访问HTTP协议的基本功能的类：HttpURLConnection。
+
+HttpURLConnection是Java的标准类，它继承自URLConnection，可用于向指定网站发送GET请求、POST请求。它在URLConnection的基础上提供了如下便捷的方法：
 	 
-* 在介绍HttpURLConnection前，我们还是再来说一下URL请求最常用的两种方式：GET请求与POST请求。
-	* GET请求的数据会附在URL之后（就是把数据放置在HTTP协议头中），以?分割URL和传输数据，参数之间以&相连，如：http://localhost:8080/test.do?name=test&password=123456。
-	* GET请求发送的参数如果数据是英文字母或数字，则按原样发送，如果是空格，则转换为+，如果是中文或其他字符，则直接把字符串用BASE64加密，得出如 %E4%BD%A0%E5%A5%BD 这类似的字符串，其中％XX中的XX为该符号以16进制表示的ASCII。
-	* POST请求的参数不是放在URL字符串里面，而是放在HTTP请求的正文内，请求的参数被封装起来以流的形式发送给服务端。
-	* 对于GET方式提交数据的大小，HTTP协议并没有硬性限制，但某些浏览器及服务器会对它进行限制，如IE对URL长度的限制是2083字节(2K+35)。理论上POST也没有限制，可传较大量的数据。
-	* POST的安全性要比GET的安全性高。比如：通过GET提交数据，用户名和密码将明文出现在URL上，因为登录页面有可能被浏览器缓存，如果其他人查看浏览器的历史纪录，那么别人就可以拿到你的账号和密码了，除此之外，使用GET提交数据还可能会造成Cross-site request forgery（CSRF，跨站请求伪造）攻击。
+	int getResponseCode(); // 获取服务器的响应代码。
+	String getResponseMessage(); // 获取服务器的响应消息。
+	String getResponseMethod(); // 获取发送请求的方法。
+	void setRequestMethod(String method); // 设置发送请求的方法。
+     
+### 3. HttpURLConnection的使用
 
-一般来说，Get是向服务器索取数据的一种请求，而Post是向服务器提交数据的一种请求。
+#### 3.1 使用GET方式访问HTTP   
+   
+	package com.qf.demo;
 	
-### 使用GET方式访问HTTP
-		
-		/**
-		 * GET请求示例
-		 */
+	import java.io.BufferedReader;
+	import java.io.IOException;
+	import java.io.InputStreamReader;
+	import java.net.HttpURLConnection;
+	import java.net.URL;
+	
+	/**
+	 * GET请求示例
+	 * 
+	 *
+	 */
 	public class GetDemo {
+	
+	    public static void main(String[] args) {
+	        try {
+	            // 1. 得到访问地址的URL
+	            URL url = new URL(
+	                    "http://localhost:8080/Servlet/do_login.do?username=test&password=123456");
+	            // 2. 得到网络访问对象java.net.HttpURLConnection
+	            HttpURLConnection connection = (HttpURLConnection) url
+	                    .openConnection();
+	            /* 3. 设置请求参数（过期时间，输入、输出流、访问方式），以流的形式进行连接 */
+	            // 设置是否向HttpURLConnection输出
+	            connection.setDoOutput(false);
+	            // 设置是否从httpUrlConnection读入
+	            connection.setDoInput(true);
+	            // 设置请求方式
+	            connection.setRequestMethod("GET");
+	            // 设置是否使用缓存
+	            connection.setUseCaches(true);
+	            // 设置此 HttpURLConnection 实例是否应该自动执行 HTTP 重定向
+	            connection.setInstanceFollowRedirects(true);
+	            // 设置超时时间
+	            connection.setConnectTimeout(3000);
+	            // 连接
+	            connection.connect();
+	            // 4. 得到响应状态码的返回值 responseCode
+	            int code = connection.getResponseCode();
+	            // 5. 如果返回值正常，数据在网络中是以流的形式得到服务端返回的数据
+	            String msg = "";
+	            if (code == 200) { // 正常响应
+	                // 从流中读取响应信息
+	                BufferedReader reader = new BufferedReader(
+	                        new InputStreamReader(connection.getInputStream()));
+	                String line = null;
+	
+	                while ((line = reader.readLine()) != null) { // 循环从流中读取
+	                    msg += line + "\n";
+	                }
+	                reader.close(); // 关闭流
+	            }
+	            // 6. 断开连接，释放资源
+	            connection.disconnect();
+	
+	            // 显示响应结果
+	            System.out.println(msg);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	}      
+    
+#### 3.2 使用POST方式访问HTTP   
+   
+	package com.qf.demo;
+	
+	import java.io.BufferedReader;
+	import java.io.IOException;
+	import java.io.InputStreamReader;
+	import java.io.OutputStream;
+	import java.net.HttpURLConnection;
+	import java.net.MalformedURLException;
+	import java.net.URL;
+	
+	/**
+	 * POST请求示例
+	 * 
+	 * @author 小明
+	 *
+	 */
+	public class PostDemo {
+	
+	    public static void main(String[] args) {
+	        try {
+	            // 1. 获取访问地址URL
+	            URL url = new URL("http://localhost:8080/Servlet/do_login.do");
+	            // 2. 创建HttpURLConnection对象
+	            HttpURLConnection connection = (HttpURLConnection) url
+	                    .openConnection();
+	            /* 3. 设置请求参数等 */
+	            // 请求方式
+	            connection.setRequestMethod("POST");
+	            // 超时时间
+	            connection.setConnectTimeout(3000);
+	            // 设置是否输出
+	            connection.setDoOutput(true);
+	            // 设置是否读入
+	            connection.setDoInput(true);
+	            // 设置是否使用缓存
+	            connection.setUseCaches(false);
+	            // 设置此 HttpURLConnection 实例是否应该自动执行 HTTP 重定向
+	            connection.setInstanceFollowRedirects(true);
+	            // 设置使用标准编码格式编码参数的名-值对
+	            connection.setRequestProperty("Content-Type",
+	                    "application/x-www-form-urlencoded");
+	            // 连接
+	            connection.connect();
+	            /* 4. 处理输入输出 */
+	            // 写入参数到请求中
+	            String params = "username=test&password=123456";
+	            OutputStream out = connection.getOutputStream();
+	            out.write(params.getBytes());
+	            out.flush();
+	            out.close();
+	            // 从连接中读取响应信息
+	            String msg = "";
+	            int code = connection.getResponseCode();
+	            if (code == 200) {
+	                BufferedReader reader = new BufferedReader(
+	                        new InputStreamReader(connection.getInputStream()));
+	                String line;
+	
+	                while ((line = reader.readLine()) != null) {
+	                    msg += line + "\n";
+	                }
+	                reader.close();
+	            }
+	            // 5. 断开连接
+	            connection.disconnect();
+	
+	            // 处理结果
+	            System.out.println(msg);
+	        } catch (MalformedURLException e) {
+	            e.printStackTrace();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	}    
+    
+#### 3.3 说明
 
-    	public static void main(String[] args) {
-    	    try {
-    	        // 1. 得到访问地址的URL
-    	        URL url = new URL(
-    	                "http://localhost:8080/Servlet/do_login.do?username=test&password=123456");
-    	        // 2. 得到网络访问对象java.net.HttpURLConnection
-    	        HttpURLConnection connection = (HttpURLConnection) url
-    	                .openConnection();
-    	        /* 3. 设置请求参数（过期时间，输入、输出流、访问方式），以流的形式进行连接 */
-    	        // 设置是否向HttpURLConnection输出
-    	        connection.setDoOutput(false);
-    	        // 设置是否从httpUrlConnection读入
-    	        connection.setDoInput(true);
-    	        // 设置请求方式
-    	        connection.setRequestMethod("GET");
-    	        // 设置是否使用缓存
-    	        connection.setUseCaches(true);
-    	        // 设置此 HttpURLConnection 实例是否应该自动执行 HTTP 重定向
-    	        connection.setInstanceFollowRedirects(true);
-    	        // 设置超时时间
-    	        connection.setConnectTimeout(3000);
-    	        // 连接
-    	        connection.connect();
-    	        // 4. 得到响应状态码的返回值 responseCode
-    	        int code = connection.getResponseCode();
-    	        // 5. 如果返回值正常，数据在网络中是以流的形式得到服务端返回的数据
-    	        String msg = "";
-    	        if (code == 200) { // 正常响应
-                // 从流中读取响应信息
-    	            BufferedReader reader = new BufferedReader(
-    	                    new InputStreamReader(connection.getInputStream()));
-    	            String line = null;
+* HttpURLConnection对象不能直接构造，需要通过URL类中的openConnection()方法来获得。
+* HttpURLConnection的connect()函数，实际上只是建立了一个与服务器的TCP连接，并没有实际发送HTTP请求。HTTP请求实际上直到我们获取服务器响应数据（如调用getInputStream()、getResponseCode()等方法）时才正式发送出去。
+* 对HttpURLConnection对象的配置都需要在connect()方法执行之前完成。
+* HttpURLConnection是基于HTTP协议的，其底层通过socket通信实现。如果不设置超时（timeout），在网络异常的情况下，可能会导致程序僵死而不继续往下执行。
+* HTTP正文的内容是通过OutputStream流写入的， 向流中写入的数据不会立即发送到网络，而是存在于内存缓冲区中，待流关闭时，根据写入的内容生成HTTP正文。
+* 调用getInputStream()方法时，返回一个输入流，用于从中读取服务器对于HTTP请求的返回信息。
+* 我们可以使用HttpURLConnection.connect()方法手动的发送一个HTTP请求，但是如果要获取HTTP响应的时候，请求就会自动的发起，比如我们使用HttpURLConnection.getInputStream()方法的时候，所以完全没有必要调用connect()方法。   
+
+### 4. HttpClient简介
+
+在一般情况下，如果只是需要向Web站点的某个简单页面提交请求并获取服务器响应，HttpURLConnection完全可以胜任。但在绝大部分情况下，Web站点的网页可能没这么简单，这些页面并不是通过一个简单的URL就可访问的，可能需要用户登录而且具有相应的权限才可访问该页面。在这种情况下，就需要涉及Session、Cookie的处理了，如果打算使用HttpURLConnection来处理这些细节，当然也是可能实现的，只是处理起来难度就大了。
+
+为了更好地处理向Web站点请求，包括处理Session、Cookie等细节问题，Apache开源组织提供了一个HttpClient项目，看它的名称就知道，它是一个简单的HTTP客户端（并不是浏览器），可以用于发送HTTP请求，接收HTTP响应。但不会缓存服务器的响应，不能执行HTML页面中嵌入的Javascript代码；也不会对页面内容进行任何解析、处理。
+
+简单来说，HttpClient就是一个增强版的HttpURLConnection，HttpURLConnection可以做的事情HttpClient全部可以做；HttpURLConnection没有提供的有些功能，HttpClient也提供了，但它只是关注于如何发送请求、接收响应，以及管理HTTP连接。      
+   
+### 5. HttpClient的使用
+
+使用HttpClient发送请求、接收响应很简单，只要如下几步即可。
+
+1. 创建HttpClient对象。
+2. 如果需要发送GET请求，创建HttpGet对象；如果需要发送POST请求，创建HttpPost对象。
+3. 如果需要发送请求参数，可调用HttpGet、HttpPost共同的setParams(HttpParams params)方法来添加请求参数；对于HttpPost对象而言，也可调用setEntity(HttpEntity entity)方法来设置请求参数。
+4. 调用HttpClient对象的execute(HttpUriRequest request)发送请求，执行该方法返回一个HttpResponse。
+5. 调用HttpResponse的getAllHeaders()、getHeaders(String name)等方法可获取服务器的响应头；调用HttpResponse的getEntity()方法可获取HttpEntity对象，该对象包装了服务器的响应内容。程序可通过该对象获取服务器的响应内容。
+   
+#### 5.1 使用GET方式访问HTTP    
+   
+	package com.qf.client;
 	
-    	            while ((line = reader.readLine()) != null) { // 循环从流中读取
-    	                msg += line + "\n";
-    	            }
-    	            reader.close(); // 关闭流
-    	        }
-    	        // 6. 断开连接，释放资源
-    	        connection.disconnect();
+	import java.io.IOException;
 	
-    	        // 显示响应结果
-    	        System.out.println(msg);
-    	    } catch (IOException e) {
-    	        e.printStackTrace();
-    	    }
-    	}
-	}  
+	import org.apache.http.HttpEntity;
+	import org.apache.http.client.ClientProtocolException;
+	import org.apache.http.client.methods.CloseableHttpResponse;
+	import org.apache.http.client.methods.HttpGet;
+	import org.apache.http.impl.client.CloseableHttpClient;
+	import org.apache.http.impl.client.HttpClientBuilder;
+	import org.apache.http.util.EntityUtils;
+	
+	/**
+	 * GET请求示例
+	 * 
+	 * @author 小明
+	 *
+	 */
+	public class GetDemo {
+	
+	    public static void main(String[] args) {
+	        // 1. 创建HttpClient对象
+	        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	        // 2. 创建HttpGet对象
+	        HttpGet httpGet = new HttpGet(
+	                "http://localhost:8080/Servlet/do_login.do?username=test&password=123456");
+	        CloseableHttpResponse response = null;
+	        try {
+	            // 3. 执行GET请求
+	            response = httpClient.execute(httpGet);
+	            System.out.println(response.getStatusLine());
+	            // 4. 获取响应实体
+	            HttpEntity entity = response.getEntity();
+	            // 5. 处理响应实体
+	            if (entity != null) {
+	                System.out.println("长度：" + entity.getContentLength());
+	                System.out.println("内容：" + EntityUtils.toString(entity));
+	            }
+	        } catch (ClientProtocolException e) {
+	            e.printStackTrace();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        } finally {
+	            // 6. 释放资源
+	            try {
+	                response.close();
+	                httpClient.close();
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    }
+	}
+    
+#### 5.2 使用POST方式访问HTTP    
+   
+	package com.qf.client;
+	
+	import java.io.IOException;
+	import java.io.UnsupportedEncodingException;
+	import java.util.ArrayList;
+	import java.util.List;
+	
+	import org.apache.http.HttpEntity;
+	import org.apache.http.NameValuePair;
+	import org.apache.http.client.ClientProtocolException;
+	import org.apache.http.client.entity.UrlEncodedFormEntity;
+	import org.apache.http.client.methods.CloseableHttpResponse;
+	import org.apache.http.client.methods.HttpPost;
+	import org.apache.http.impl.client.CloseableHttpClient;
+	import org.apache.http.impl.client.HttpClientBuilder;
+	import org.apache.http.message.BasicNameValuePair;
+	import org.apache.http.util.EntityUtils;
+	
+	/**
+	 * POST请求测试
+	 * 
+	 * @author 小明
+	 *
+	 */
+	public class PostDemo {
+	
+	    public static void main(String[] args) {
+	        // 1. 创建HttpClient对象
+	        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	        // 2. 创建HttpPost对象
+	        HttpPost post = new HttpPost(
+	                "http://localhost:8080/Servlet/do_login.do");
+	        // 3. 设置POST请求传递参数
+	        List<NameValuePair> params = new ArrayList<NameValuePair>();
+	        params.add(new BasicNameValuePair("username", "test"));
+	        params.add(new BasicNameValuePair("password", "12356"));
+	        try {
+	            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params);
+	            post.setEntity(entity);
+	        } catch (UnsupportedEncodingException e) {
+	            e.printStackTrace();
+	        }
+	        // 4. 执行请求并处理响应
+	        try {
+	            CloseableHttpResponse response = httpClient.execute(post);
+	            HttpEntity entity = response.getEntity();
+	            if (entity != null){
+	                System.out.println("响应内容：");
+	                System.out.println(EntityUtils.toString(entity));
+	            }
+	            response.close();
+	        } catch (ClientProtocolException e) {
+	            e.printStackTrace();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        } finally {
+	            // 释放资源
+	            try {
+	                httpClient.close();
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    }
+	}
+     
   
+#### 5.3 说明
+
+HttpClient相比传统JDK自带的URLConnection，增加了易用性和灵活性，它不仅使客户端发送HTTP请求变得容易，而且也方便了开发人员测试接口（基于Http协议的），即提高了开发的效率，也方便提高代码的健壮性。   
+
+
 ## TCP/IP、Socket、Http简要介绍
 
 　　1、TCP/IP中文名为传输控制协议/因特网互联协议，又名网络通讯协议，是Internet最基本的协议、Internet国际互联网络的基础，由网络层的IP协议和传输层的TCP协议组成。
