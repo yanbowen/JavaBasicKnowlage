@@ -84,30 +84,39 @@ notifyAll() 方法将把因调用该对象的 wait() 方法而阻塞的所有线
 	
 懒汉式	  
 
-	public class SingletonDemo {
-    	private static SingletonDemo instance;
-    	private SingletonDemo(){
-
-    	}
-    	public static synchronized SingletonDemo getInstance(){
-    	    if(instance==null){
-    	        instance=new SingletonDemo();
-    	    }
-    	    return instance;
-    	}
-	}
+	public class Singleton{  
+    	private static Singleton instance = null;  
+    	private Singleton(){}  
+    	public static Singleton newInstance(){  
+    	    if(null == instance){  
+    	        instance = new Singleton();  
+    	    }  
+    	    return instance;  
+    	}  
+	} 
 
 饿汉式  
 
-	public class SingletonDemo {
-    	private static SingletonDemo instance = new SingletonDemo();
-    	private SingletonDemo(){
-
-    	}
-    	public static SingletonDemo getInstance(){
-    	    return instance;
-    	}
-	} 
+	public class Singleton{  
+	    private static Singleton instance = new Singleton();  
+	    private Singleton(){}  
+	    public static Singleton newInstance(){  
+	        return instance;  
+	    }  
+	}     
+   
+静态内部类   
+   
+	public class Singleton{  
+	    private static class SingletonHolder{  
+	        public static Singleton instance = new Singleton();  
+	    }  
+	    private Singleton(){}  
+	    public static Singleton newInstance(){  
+	        return SingletonHolder.instance;  
+	    }  
+	}  
+   
   
 ## 使用软引用构建缓存  
   
